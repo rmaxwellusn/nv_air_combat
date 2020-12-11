@@ -1,0 +1,41 @@
+---
+title: "Maxwell Final"
+author: "Robert Maxwell"
+date: "12/9/2020"
+output: pdf_document
+---
+
+```{r setup, warning=FALSE}
+library(tidyverse)
+library(lubridate) #to fix my dates 
+library(readxl) #to read XLS files
+library(biogeo) #to convert from degrees to decimal lat/long
+```
+
+## Loading Dataset and cleaning dates
+I hand coded my data from the 1967 report, codenamed "Red Baron" that covered every air to air encounter over North Vietnam. I coded this in Excel, which allows for an ease of legibility and use-friendlyness. However, because the majority of work on this project will be done in QGIS, which plays much better with .CSV Files, I will read the file from the .xls, and use lubridate to fix the dates, and output a CSV file. 
+
+```{r}
+nv_dataset <- read_xlsx("maxwell_red_baron.xlsx")
+#now that I have my dataframe, I will use "lubridate" to fix the dates
+nv_dataset$Date <- as_date(nv_dataset$Date)
+```
+
+## Making my lat/long workable
+My chosen GIS program QGIS only accepts Lat/long in decimal form. My source is only in degree form.....I will now mutate two new columns to make workable decimal coordinates. I will then select out the original imputs, leaving a cleaner decimal lat and long. 
+
+```{r}
+nv_dataset<- nv_dataset %>%
+  mutate(lat_dec = dms2dd(Lat, `Lat Min`, 0, `Lat Card`)) %>%
+  mutate(long_dec = dms2dd(Long, `Long Min`, 0, `Lat Card`))
+nv_dataset<- nv_dataset %>%
+  select(-Lat, -`Lat Min`, -`Lat Card`, -Long, -`Long Min`, -`Long Card`)
+structure(nv_dataset)
+```
+
+## Now Making my CSV File 
+
+```{r}
+write_csv(nv_dataset, "nv_dataset.csv")
+```
+
